@@ -1,7 +1,9 @@
 class Mover {
   constructor(x, y, radius) {
     this.pos = createVector(x, y);
-    this.vel = createVector(0, 0);
+    // this.vel = createVector(0, 0);
+    this.vel = p5.Vector.random2D(0, 0);
+    this.mult;
     this.acc = createVector(0, 0.01);
     this.radius = radius;
     this.mass = radius ** (1 / 2);
