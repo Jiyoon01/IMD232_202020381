@@ -4,7 +4,7 @@ let infiniteOffset = 80; // 물체가 캔버스 바깥 공간에서 허용되는
 function setup() {
   // 초기 설정
   setCanvasContainer('canvas', 3, 2, true); // 3:2 비율로 캔버스 생성
-  colorMode(HSL, 360, 100, 100, 100); // 색상 모드를 HSL로 설정 (색상: 360, 채도: 200, 명도: 100, 알파: 80)
+  colorMode(HSL, 360, 100, 100, 100); // 색상 모드를 HSL로 설정 (색상: 360, 채도: 200, 명도: 150, 알파: 80)
   background(255); // 캔버스 배경을 흰색으로 설정
   traffic = new Traffic(); // Traffic 객체 생성
   for (let n = 0; n < 10; n++) {
