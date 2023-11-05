@@ -24,7 +24,7 @@ class Traffic {
     // const mass = floor(random(1, 3));
     const mass = 0.7;
     this.vehicles.push(
-      new Vehicle(x, y, mass, mass * 12, 5, 0.1, color(random(300), 100, 40))
+      new Vehicle(x, y, mass, mass * 12, 5, 0.1, color(random(360), 100, 40))
     );
   }
 }
