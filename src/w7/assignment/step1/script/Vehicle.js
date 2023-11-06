@@ -137,10 +137,17 @@ class Vehicle {
     noStroke(); // 윤곽선 없음
     fill(this.color); // 물체를 색칠
     beginShape(); // 도형 그리기 시작
-    vertex(this.rad, 0); // 현재 위치에서 (rad, 0)까지 선 그리기
-    vertex(this.rad * cos(radians(-135)), this.rad * sin(radians(-135))); // 현재 위치에서 (rad*cos(-135), rad*sin(-135))까지 선 그리기
-    vertex(0, 0); // 현재 위치에서 (0, 0)까지 선 그리기
-    vertex(this.rad * cos(radians(135)), this.rad * sin(radians(135))); // 현재 위치에서 (rad*cos(135), rad*sin(135))까지 선 그리기
+
+    // 베젤 곡선을 사용하여 하트 모양 정의
+    let x = 0;
+    let y = 0;
+    let h = this.rad;
+    beginShape();
+    vertex(x, y);
+    bezierVertex(x - h / 2, y - h / 2, x - h, y + h / 3, x, y + h);
+    bezierVertex(x + h, y + h / 3, x + h / 2, y - h / 2, x, y);
+    endShape(CLOSE);
+
     endShape(CLOSE); // 도형 그리기 종료
     pop(); // 이전 드로잉 설정 복원
   }
