@@ -1,3 +1,9 @@
+function setup() {
+  setCanvasContainer('canvas', 3, 2, true);
+  colorMode(HSL, 360, 100, 100, 100);
+  background(255);
+}
+
 var Engine = Matter.Engine,
   Render = Matter.Render,
   Runner = Matter.Runner,
