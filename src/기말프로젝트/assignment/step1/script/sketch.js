@@ -26,8 +26,20 @@ function draw() {
   for (let x = 0; x < width; x += 10) {
     const y = wave.amplitude * sin(wave.frequency * x + wave.phase);
     const distortion = map(noise(x * 0.01, frameCount * 0.005), 0, 1, -10, 10);
-    const mx = mouseX / width; // Normalize mouse position
-    curveVertex(x + distortion + mx * 50, y + height / 2 + distortion);
+
+    // 추가된 부분: 마우스 위치에 따라 파장의 형태가 변화
+    const distanceToMouse = dist(
+      x + distortion,
+      y + height / 2 + distortion,
+      mouseX,
+      mouseY
+    );
+    const influence = map(distanceToMouse, 0, width, 100, 0);
+
+    curveVertex(
+      x + distortion + mouseX * 0.01 * influence,
+      y + height / 2 + distortion + mouseY * 0.01 * influence
+    );
   }
 
   endShape();
