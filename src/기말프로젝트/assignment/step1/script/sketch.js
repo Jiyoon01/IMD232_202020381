@@ -1,136 +1,125 @@
-function setup() {
-  setCanvasContainer('canvas', 3, 2, true);
-  colorMode(HSL, 360, 100, 100, 100);
-  background(255);
-}
+var ps;
+var time,
+  ptime = 0;
+var offset;
+var origin;
+var bg = 0;
 
-// 모든 경로
-let paths = [];
-// 지금 페인팅을 하고 있나요?
-let painting = false;
-// 다음 원까지 걸리는 시간
-let next = 0;
-// 현재 및 이전 위치
-let current;
-let previous;
+// yellow, pink, blue, green
+var colors = ['#FFE300', '#FF7494', '#00E6FF', '#89FF47'];
 
 function setup() {
-  createCanvas(720, 400);
-  current = createVector(0, 0);
-  previous = createVector(0, 0);
+  createCanvas(windowWidth, windowHeight);
+  ps = new ParticleSystem();
+  background(87, 6, 140);
+  offset = createVector(random(1000), random(1000));
+  origin = createVector(width / 2, height / 2);
 }
 
 function draw() {
-  background(200);
+  if (bg % 2 == 0) background(87, 6, 140, 20);
+  else background(0, 0, 0, 20);
 
-  // 새로운 점을 만들어 봅시다.
-  if (millis() > next && painting) {
-    // 마우스 위치 받아오기
-    current.x = mouseX;
-    current.y = mouseY;
-
-    // 새로운 파티클의 힘은 마우스의 움직임에 기반을 둡니다.
-    let force = p5.Vector.sub(current, previous);
-    force.mult(0.05);
-
-    // 새로운 파티클 더하기
-    paths[paths.length - 1].add(current, force);
-
-    // 다음 원의 시간 정하기
-    next = millis() + random(100);
-
-    // 더 많은 마우스값 저장하기
-    previous.x = current.x;
-    previous.y = current.y;
+  if (millis() - ptime > 800) {
+    var step = createVector(noise(offset.x) - 0.5, noise(offset.y) - 0.5);
+    step.mult(10);
+    var pos = p5.Vector.add(origin, step);
+    if (pos.x > width) pos.x -= width;
+    if (pos.x < 0) pos.x += width;
+    if (pos.y > height) pos.y -= height;
+    if (pos.y < 0) pos.y += height;
+    ps.addParticle(pos, origin);
+    origin = pos;
+    offset.x += 0.01;
+    offset.y += 0.01;
+    ptime = millis();
   }
 
-  // 모든 경로 그리기
-  for (let i = 0; i < paths.length; i++) {
-    paths[i].update();
-    paths[i].display();
-  }
+  ps.follow(mouseX, mouseY);
+  ps.run();
 }
 
-// 시작하기
-function mousePressed() {
-  next = 0;
-  painting = true;
-  previous.x = mouseX;
-  previous.y = mouseY;
-  paths.push(new Path());
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
 }
 
-// 정지
-function mouseReleased() {
-  painting = false;
+function mouseClicked() {
+  bg++;
 }
 
-// Path(경로)는 파티클들의 목록입니다.
-class Path {
-  constructor() {
-    this.particles = [];
-    this.hue = random(100);
-  }
+var Particle = function (pos, ppos) {
+  this.pos = pos.copy();
+  this.col = random(colors);
+  this.size = random(5, 30);
+  this.fill = random([0, 1]);
+  this.velocity = createVector(0, 0);
+  this.acceleration = createVector(0, 0);
+  this.offset = createVector(random(0, 1000), random(0, 1000));
 
-  add(position, force) {
-    // 새로운 파티클을 그 위치, 힘, 색조값과 함께 추가하기
-    this.particles.push(new Particle(position, force, this.hue));
-  }
+  this.update = function () {
+    this.velocity.add(this.acceleration);
+    this.pos.add(this.velocity);
+    this.pos.add(
+      createVector(
+        10 * (noise(this.offset.x) - 0.5),
+        10 * (noise(this.offset.y) - 0.5)
+      )
+    );
+    this.offset.x = this.offset.x + 0.01;
+    this.offset.y = this.offset.y + 0.01;
+    this.size = this.size * 0.95;
+    this.acceleration.mult(0);
+    if (this.velocity.mag() > 1) this.velocity.mult(0.95);
+  };
 
-  // 파티클 길이 화면에 보이기
-  update() {
-    for (let i = 0; i < this.particles.length; i++) {
-      this.particles[i].update();
+  this.isDead = function () {
+    return this.size < 1;
+  };
+
+  this.render = function () {
+    if (this.fill == 1) {
+      noStroke();
+      fill(this.col);
+    } else {
+      noFill();
+      stroke(this.col);
     }
-  }
+    ellipse(this.pos.x, this.pos.y, this.size, this.size);
+  };
 
-  // 파티클 길이 화면에 보이기
-  display() {
-    // 뒤로 반복하기
-    for (let i = this.particles.length - 1; i >= 0; i--) {
-      // 만약 제거해야 된다면,
-      if (this.particles[i].lifespan <= 0) {
+  this.follow = function (targetX, targetY) {
+    var force = createVector(targetX, targetY);
+    force.sub(this.pos);
+    force.setMag(0.2);
+    this.applyForce(force);
+  };
+
+  this.applyForce = function (force) {
+    this.acceleration.add(force);
+  };
+};
+
+var ParticleSystem = function () {
+  this.particles = [];
+
+  this.addParticle = function (pos, ppos) {
+    this.particles.push(new Particle(pos, ppos));
+  };
+
+  this.run = function () {
+    for (var i = this.particles.length - 1; i >= 0; i--) {
+      var p = this.particles[i];
+      p.update();
+      p.render();
+      if (p.isDead()) {
         this.particles.splice(i, 1);
-        // 그렇지 않다면, 화면에 보이기
-      } else {
-        this.particles[i].display(this.particles[i + 1]);
       }
     }
-  }
-}
+  };
 
-// 경로 위 파티클들
-class Particle {
-  constructor(position, force, hue) {
-    this.position = createVector(position.x, position.y);
-    this.velocity = createVector(force.x, force.y);
-    this.drag = 0.95;
-    this.lifespan = 255;
-  }
-
-  update() {
-    // Move it
-    this.position.add(this.velocity);
-    // Slow it down
-    this.velocity.mult(this.drag);
-    // Fade it out
-    this.lifespan--;
-  }
-
-  // 파티클을 그리고 선으로 잇기
-  // 다른 파티클을 향해 선그리기
-  display(other) {
-    stroke(0, this.lifespan);
-    fill(0, this.lifespan / 2);
-    ellipse(this.position.x, this.position.y, 8, 8);
-    // 선을 그려야 한다면,
-    if (other) {
-      line(
-        this.position.x,
-        this.position.y,
-        other.position.x,
-        other.position.y
-      );
+  this.follow = function (targetX, targetY) {
+    for (var i = 0; i < this.particles.length; i++) {
+      this.particles[i].follow(targetX, targetY);
     }
-  }
-}
+  };
+};
