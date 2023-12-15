@@ -1,125 +1,75 @@
-var ps;
-var time,
-  ptime = 0;
-var offset;
-var origin;
-var bg = 0;
+function setup() {
+  setCanvasContainer('canvas', 3, 2, true);
+  colorMode(HSL, 360, 100, 100, 100);
+  background(255);
+}
 
-// yellow, pink, blue, green
-var colors = ['#FFE300', '#FF7494', '#00E6FF', '#89FF47'];
+// 이 클래스는 각 파티클(물방울)의 속성들을 표현합니다.
+class Particle {
+  // 파티클의 좌표값, 반경, 속도, 그리고 생명주기 설정
+  constructor() {
+    this.x = mouseX;
+    this.y = mouseY;
+    this.radius = random(10, 20);
+    this.xSpeed = random(-2, 2);
+    this.ySpeed = random(-2, 2);
+    this.life = 255; // 초기 생명주기
+  }
+
+  // 파티클 그리기
+  drawParticle() {
+    noStroke();
+    fill(0, 0, 255, this.life);
+    ellipse(this.x, this.y, this.radius * 2, this.radius * 2);
+  }
+
+  // 파티클 이동
+  moveParticle() {
+    this.x += this.xSpeed;
+    this.y += this.ySpeed;
+  }
+
+  // 파티클 생명주기 감소
+  decreaseLife() {
+    this.life -= 2;
+  }
+
+  // 파티클이 소멸되었는지 확인
+  isDead() {
+    return this.life <= 0;
+  }
+}
+
+// 복수의 파티클들을 추가하기 위한 배열
+let particles = [];
 
 function setup() {
-  createCanvas(windowWidth, windowHeight);
-  ps = new ParticleSystem();
-  background(87, 6, 140);
-  offset = createVector(random(1000), random(1000));
-  origin = createVector(width / 2, height / 2);
+  createCanvas(720, 400);
 }
 
 function draw() {
-  if (bg % 2 == 0) background(87, 6, 140, 20);
-  else background(0, 0, 0, 20);
+  background(255);
 
-  if (millis() - ptime > 800) {
-    var step = createVector(noise(offset.x) - 0.5, noise(offset.y) - 0.5);
-    step.mult(10);
-    var pos = p5.Vector.add(origin, step);
-    if (pos.x > width) pos.x -= width;
-    if (pos.x < 0) pos.x += width;
-    if (pos.y > height) pos.y -= height;
-    if (pos.y < 0) pos.y += height;
-    ps.addParticle(pos, origin);
-    origin = pos;
-    offset.x += 0.01;
-    offset.y += 0.01;
-    ptime = millis();
+  // 모든 파티클 그리기 및 이동
+  for (let i = 0; i < particles.length; i++) {
+    particles[i].drawParticle();
+    particles[i].moveParticle();
+    particles[i].decreaseLife();
+
+    // 파티클이 소멸되었을 경우 배열에서 제거
+    if (particles[i].isDead()) {
+      particles.splice(i, 1);
+      i--;
+    }
   }
-
-  ps.follow(mouseX, mouseY);
-  ps.run();
 }
 
-function windowResized() {
-  resizeCanvas(windowWidth, windowHeight);
-}
-
+// 마우스를 클릭할 때마다 새로운 파티클(물방울) 생성
 function mouseClicked() {
-  bg++;
+  particles.push(new Particle());
 }
 
-var Particle = function (pos, ppos) {
-  this.pos = pos.copy();
-  this.col = random(colors);
-  this.size = random(5, 30);
-  this.fill = random([0, 1]);
-  this.velocity = createVector(0, 0);
-  this.acceleration = createVector(0, 0);
-  this.offset = createVector(random(0, 1000), random(0, 1000));
-
-  this.update = function () {
-    this.velocity.add(this.acceleration);
-    this.pos.add(this.velocity);
-    this.pos.add(
-      createVector(
-        10 * (noise(this.offset.x) - 0.5),
-        10 * (noise(this.offset.y) - 0.5)
-      )
-    );
-    this.offset.x = this.offset.x + 0.01;
-    this.offset.y = this.offset.y + 0.01;
-    this.size = this.size * 0.95;
-    this.acceleration.mult(0);
-    if (this.velocity.mag() > 1) this.velocity.mult(0.95);
-  };
-
-  this.isDead = function () {
-    return this.size < 1;
-  };
-
-  this.render = function () {
-    if (this.fill == 1) {
-      noStroke();
-      fill(this.col);
-    } else {
-      noFill();
-      stroke(this.col);
-    }
-    ellipse(this.pos.x, this.pos.y, this.size, this.size);
-  };
-
-  this.follow = function (targetX, targetY) {
-    var force = createVector(targetX, targetY);
-    force.sub(this.pos);
-    force.setMag(0.2);
-    this.applyForce(force);
-  };
-
-  this.applyForce = function (force) {
-    this.acceleration.add(force);
-  };
-};
-
-var ParticleSystem = function () {
-  this.particles = [];
-
-  this.addParticle = function (pos, ppos) {
-    this.particles.push(new Particle(pos, ppos));
-  };
-
-  this.run = function () {
-    for (var i = this.particles.length - 1; i >= 0; i--) {
-      var p = this.particles[i];
-      p.update();
-      p.render();
-      if (p.isDead()) {
-        this.particles.splice(i, 1);
-      }
-    }
-  };
-
-  this.follow = function (targetX, targetY) {
-    for (var i = 0; i < this.particles.length; i++) {
-      this.particles[i].follow(targetX, targetY);
-    }
-  };
-};
+// 마우스를 드래그하는 동안 파티클 계속 생성
+function mouseDragged() {
+  particles.push(new Particle());
+}
