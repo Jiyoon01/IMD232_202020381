@@ -19,13 +19,15 @@ function draw() {
   background(255);
 
   noFill();
+  stroke(0);
   strokeWeight(2);
   beginShape();
 
   for (let x = 0; x < width; x += 10) {
     const y = wave.amplitude * sin(wave.frequency * x + wave.phase);
     const distortion = map(noise(x * 0.01, frameCount * 0.005), 0, 1, -10, 10);
-    curveVertex(x + distortion, y + height / 2 + distortion);
+    const mx = mouseX / width; // Normalize mouse position
+    curveVertex(x + distortion + mx * 50, y + height / 2 + distortion);
   }
 
   endShape();
