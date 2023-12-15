@@ -4,66 +4,34 @@ function setup() {
   background(255);
 }
 
-// 이 클래스는 각 파티클의 속성들을 표현합니다.
-class Particle {
-  // 파티클의 좌표값, 반경, 그리고 속도를
-  // 두 좌표축에 의거하여 설정합니다.
-  constructor() {
-    this.x = random(0, width);
-    this.y = random(0, height);
-    this.r = random(1, 8);
-    this.xSpeed = random(-2, 2);
-    this.ySpeed = random(-1, 1.5);
-  }
-
-  // 파티클 생성하기
-  createParticle() {
-    noStroke();
-    fill('rgba(200,169,169,0.5)');
-    circle(this.x, this.y, this.r);
-  }
-
-  // 파티클이 움직이도록 설정하기
-  moveParticle() {
-    if (this.x < 0 || this.x > width) this.xSpeed *= -1;
-    if (this.y < 0 || this.y > height) this.ySpeed *= -1;
-    this.x += this.xSpeed;
-    this.y += this.ySpeed;
-  }
-
-  // 이 함수는 특정 거리 안쪽에 위치한 파티클들 사이에 연결선을 만듭니다.
-  joinParticles(paraticles) {
-    particles.forEach((element) => {
-      let dis = dist(this.x, this.y, element.x, element.y);
-      if (dis < 85) {
-        stroke('rgba(255,255,255,0.04)');
-        line(this.x, this.y, element.x, element.y);
-      }
-    });
-  }
-}
-
-// 복수의 파티클들을 추가하기 위한 배열
-let particles = [];
+let mic;
+let fft;
 
 function setup() {
-  createCanvas(720, 400);
-  for (let i = 0; i < width / 10; i++) {
-    particles.push(new Particle());
-  }
+  createCanvas(800, 400);
+
+  // 마이크 입력 설정
+  mic = new p5.AudioIn();
+  mic.start();
+
+  // FFT(Fast Fourier Transform) 객체 생성
+  fft = new p5.FFT();
+  fft.setInput(mic);
 }
 
 function draw() {
-  background('#0f0f0f');
-  for (let i = 0; i < particles.length; i++) {
-    particles[i].createParticle();
-    particles[i].moveParticle();
-    particles[i].joinParticles(particles.slice(i));
-  }
-}
+  background(0);
 
-function draw() {
-  // variableEllipse()메소드를 호출하고, 여기에
-  // 마우스의 현재 및 이전 위치를 담은 매개 변수를 보냅니다.
-  variableEllipse(mouseX, mouseY, pmouseX, pmouseY);
+  // 주파수 스펙트럼 분석
+  let spectrum = fft.analyze();
+
+  noStroke();
+  fill(255);
+
+  // 주파수 스펙트럼을 바 형태로 그림
+  for (let i = 0; i < spectrum.length; i++) {
+    let x = map(i, 0, spectrum.length, 0, width);
+    let h = -height + map(spectrum[i], 0, 255, height, 0);
+    rect(x, height, width / spectrum.length, h);
+  }
 }
