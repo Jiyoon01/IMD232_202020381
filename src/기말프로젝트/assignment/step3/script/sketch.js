@@ -28,7 +28,7 @@ class Particle {
   constructor() {
     this.x = mouseX;
     this.y = mouseY;
-    this.size = random(5, 20);
+    this.size = random(5, 35);
     this.color = color(random(360), 80, 80, 0.7);
     this.velocity = p5.Vector.random2D().mult(random(2, 5));
     this.life = 255;
