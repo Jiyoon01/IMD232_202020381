@@ -3,7 +3,7 @@ let particles = [];
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  strokeWeight(3);
+  strokeWeight(2);
 }
 
 function draw() {
@@ -102,9 +102,12 @@ class Particle {
   }
 
   display() {
-    noStroke();
-    fill(255, this.lifespan); // 흰색
-    ellipse(this.position.x, this.position.y, 5, 5);
+    let x2 = this.position.x + noise(this.position.x) * 5;
+    let y2 = this.position.y + noise(this.position.y) * 5;
+
+    strokeWeight(1); // 선의 굵기를 1로 설정
+    stroke(255, this.lifespan); // 흰색
+    line(this.position.x, this.position.y, x2, y2);
   }
 
   isFinished() {
